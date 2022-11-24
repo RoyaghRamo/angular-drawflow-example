@@ -1,0 +1,153 @@
+<div *ngIf="showNodes && (!nodes || nodes.length == 0)">
+  <h2>There are no Jobs to draw a Pipeline</h2>
+</div>
+<div class="drawing-board">
+  <div class="wrapper">
+    <div *ngIf="showNodes" class="col">
+      <ng-container *ngFor="let node of nodes">
+        <div class="drag-drawflow" draggable="true" (dragstart)="onDrawflowEvent($event)">
+          {{ node.infos.name }}
+        </div>
+        <!-- <div>
+          <label>Inputs:</label>
+          <input type="number" [(ngModel)]="node.inputs" min="0" style="width: 14%" />
+          <label>Outputs:</label>
+          <input type="number" [(ngModel)]="node.outputs" min="0" style="width: 14%" />
+        </div> -->
+      </ng-container>
+    </div>
+    <div class="col-right" [ngStyle]="{ width: showNodes ? '80%' : '100%' }">
+      <div
+        id="drawflow"
+        (dragenter)="onDrawflowEvent($event)"
+        (dragleave)="onDrawflowEvent($event)"
+        (dragover)="onDrawflowEvent($event)"
+        (dragend)="onDrawflowEvent($event)"
+        (drop)="onDrawflowEvent($event)"
+      ></div>
+      <div class="btn-clear" (click)="onClear()">Clear</div>
+      <div *ngIf="showLock" class="btn-lock" [ngClass]="locked ? 'locked' : ''">
+        <i (click)="changeMode()" class="fas fa-lock-open" [ngStyle]="{ display: locked ? 'none' : 'block' }"></i>
+        <i (click)="changeMode()" class="fas fa-lock" [ngStyle]="{ display: locked ? 'block' : 'none' }"></i>
+      </div>
+      <div class="bar-zoom">
+        <i (click)="onZoomOut()" class="fas fa-search-minus"></i>
+        <i (click)="onZoomReset()" class="fas fa-search"></i>
+        <i (click)="onZoomIn()" class="fas fa-search-plus"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Selected Node</h4>
+  </div>
+  <div class="modal-body" *ngIf="selectedNode">
+    <div class="row">
+      <div class="col-6">
+        <div class="form-group">
+          <label>Name</label>
+          <input
+            type="text"
+            class="form-control"
+            name="name"
+            [(ngModel)]="selectedNode.data.infos.name"
+            (keypress)="onKeyEvent($event)"
+            (keydown)="onKeyEvent($event)"
+            (keyup)="onKeyEvent($event)"
+            required
+          />
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="form-group">
+          <label>Description</label>
+          <input
+            type="text"
+            class="form-control"
+            name="description"
+            [(ngModel)]="selectedNode.data.infos.description"
+            required
+          />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-2">
+        <div class="form-group">
+          <label>Required</label>
+          <select
+            class="bl-text-input__input ng-untouched ng-pristine ng-valid"
+            [(ngModel)]="selectedNode.data.properties.required"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option [value]="true" [selected]="selectedNode.data.properties.required === true">True</option>
+            <option [value]="false" [selected]="selectedNode.data.properties.required === false">False</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="form-group">
+          <label>Previous Status Trigger Mode</label>
+          <select
+            class="bl-text-input__input ng-untouched ng-pristine ng-valid"
+            [(ngModel)]="selectedNode.data.properties.prevStatusTrigger.mode"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option
+              *ngFor="let prevStatusTriggerMode of otherDetails.prevStatusTriggerModes"
+              [value]="prevStatusTriggerMode"
+            >
+              {{ prevStatusTriggerMode }}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        *ngIf="selectedNode.data.properties.prevStatusTrigger.mode == otherDetails.prevStatusTriggerModes[0]"
+        class="col-1"
+      >
+        <div class="form-group">
+          <label>Value</label>
+          <input
+            type="number"
+            max="100"
+            min="1"
+            class="form-control"
+            [(ngModel)]="selectedNode.data.properties.prevStatusTrigger.value"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-2">
+        <div class="form-group">
+          <label>Trigger Mode</label>
+          <select
+            class="bl-text-input__input ng-untouched ng-pristine ng-valid"
+            [(ngModel)]="selectedNode.data.properties.triggers.mode"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option *ngFor="let triggerMode of otherDetails.triggerModes">{{ triggerMode }}</option>
+          </select>
+        </div>
+      </div>
+      <div *ngIf="selectedNode.data.properties.triggers.mode == otherDetails.triggerModes[1]" class="col-2">
+        <div class="form-group">
+          <label>Value</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="selectedNode.data.properties.triggers.value"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="modal.dismiss(selectedNode)">Save</button>
+  </div>
+</ng-template>
